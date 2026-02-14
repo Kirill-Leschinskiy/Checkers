@@ -33,30 +33,31 @@ class Game
         }
         is_replay = false;
 
-        int turn_num = -1;
-        bool is_quit = false;
-        const int Max_turns = config("Game", "MaxNumTurns");
-        while (++turn_num < Max_turns)
+        int turn_num = -1; // номер первого хода
+        bool is_quit = false; // переменная выхода из игры
+        const int Max_turns = config("Game", "MaxNumTurns"); // получаем максимальное число ходов
+        while (++turn_num < Max_turns) 
         {
-            beat_series = 0;
+            beat_series = 0; // количество побитых шашек в серии
             logic.find_turns(turn_num % 2);
             if (logic.turns.empty())
                 break;
             logic.Max_depth = config("Bot", string((turn_num % 2) ? "Black" : "White") + string("BotLevel"));
-            if (!config("Bot", string("Is") + string((turn_num % 2) ? "Black" : "White") + string("Bot")))
+            // определяем, кто сейчас ходит: бот или игрок
+            if (!config("Bot", string("Is") + string((turn_num % 2) ? "Black" : "White") + string("Bot"))) 
             {
-                auto resp = player_turn(turn_num % 2);
-                if (resp == Response::QUIT)
+                auto resp = player_turn(turn_num % 2); // вызываем функцию хода игрока и сохраняем в переменную resp
+                if (resp == Response::QUIT) // если игрок нажал на кнопку выхода
                 {
-                    is_quit = true;
+                    is_quit = true; // завершаем игру
                     break;
                 }
-                else if (resp == Response::REPLAY)
+                else if (resp == Response::REPLAY) // если нажал на кнопку переиграть
                 {
                     is_replay = true;
                     break;
                 }
-                else if (resp == Response::BACK)
+                else if (resp == Response::BACK) // если нажал на кнопку отмены хода
                 {
                     if (config("Bot", string("Is") + string((1 - turn_num % 2) ? "Black" : "White") + string("Bot")) &&
                         !beat_series && board.history_mtx.size() > 2)
@@ -64,7 +65,7 @@ class Game
                         board.rollback();
                         --turn_num;
                     }
-                    if (!beat_series)
+                    if (!beat_series) 
                         --turn_num;
 
                     board.rollback();
@@ -73,7 +74,7 @@ class Game
                 }
             }
             else
-                bot_turn(turn_num % 2);
+                bot_turn(turn_num % 2); // ходит бот
         }
         auto end = chrono::steady_clock::now();
         ofstream fout(project_path + "log.txt", ios_base::app);
@@ -111,19 +112,19 @@ class Game
         auto delay_ms = config("Bot", "BotDelayMS");
         // new thread for equal delay for each turn
         thread th(SDL_Delay, delay_ms);
-        auto turns = logic.find_best_turns(color);
+        auto turns = logic.find_best_turns(color); // находит наилучший ход для бота в зависимости от цвета и записывает их в список
         th.join();
         bool is_first = true;
         // making moves
-        for (auto turn : turns)
+        for (auto turn : turns) // проходимся по всем ходам бота
         {
             if (!is_first)
             {
-                SDL_Delay(delay_ms);
+                SDL_Delay(delay_ms); // ели бот не ходит первым, то задержка
             }
             is_first = false;
             beat_series += (turn.xb != -1);
-            board.move_piece(turn, beat_series);
+            board.move_piece(turn, beat_series); // передвигаем фигуры бота
         }
 
         auto end = chrono::steady_clock::now();
@@ -152,7 +153,7 @@ class Game
             pair<POS_T, POS_T> cell{get<1>(resp), get<2>(resp)};
 
             bool is_correct = false;
-            for (auto turn : logic.turns)
+            for (auto turn : logic.turns) // проверка возможных ходов игрока
             {
                 if (turn.x == cell.first && turn.y == cell.second)
                 {
@@ -196,14 +197,14 @@ class Game
         board.clear_highlight();
         board.clear_active();
         board.move_piece(pos, pos.xb != -1);
-        if (pos.xb == -1)
+        if (pos.xb == -1) // если игрок кого-то побил
             return Response::OK;
         // continue beating while can
         beat_series = 1;
         while (true)
         {
-            logic.find_turns(pos.x2, pos.y2);
-            if (!logic.have_beats)
+            logic.find_turns(pos.x2, pos.y2); // если мы кого-то побили фишкей, ей же нужно и ходить
+            if (!logic.have_beats) // если возможных ходов чтобы побить нет, то заканчиваем
                 break;
 
             vector<pair<POS_T, POS_T>> cells;
@@ -216,13 +217,13 @@ class Game
             // trying to make move
             while (true)
             {
-                auto resp = hand.get_cell();
+                auto resp = hand.get_cell(); // ожидаем нажатие игроком на клетку
                 if (get<0>(resp) != Response::CELL)
                     return get<0>(resp);
                 pair<POS_T, POS_T> cell{get<1>(resp), get<2>(resp)};
 
                 bool is_correct = false;
-                for (auto turn : logic.turns)
+                for (auto turn : logic.turns) // пытаемся  кого-то побить
                 {
                     if (turn.x2 == cell.first && turn.y2 == cell.second)
                     {
@@ -236,7 +237,7 @@ class Game
 
                 board.clear_highlight();
                 board.clear_active();
-                beat_series += 1;
+                beat_series += 1; // увеличиваем серию побитий на 1
                 board.move_piece(pos, beat_series);
                 break;
             }

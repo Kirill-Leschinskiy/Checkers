@@ -20,12 +20,12 @@ class Board
 {
 public:
     Board() = default;
-    Board(const unsigned int W, const unsigned int H) : W(W), H(H)
+    Board(const unsigned int W, const unsigned int H) : W(W), H(H)  // конструктор доски
     {
     }
 
     // draws start board
-    int start_draw()
+    int start_draw() // начальное положение доски, отрисовка всех текстур
     {
         if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
         {
@@ -74,7 +74,7 @@ public:
         return 0;
     }
 
-    void redraw()
+    void redraw()  // перерисовка доски
     {
         game_results = -1;
         history_mtx.clear();
@@ -84,7 +84,7 @@ public:
         clear_highlight();
     }
 
-    void move_piece(move_pos turn, const int beat_series = 0)
+    void move_piece(move_pos turn, const int beat_series = 0)  // двигает шашки по доске
     {
         if (turn.xb != -1)
         {
@@ -93,7 +93,7 @@ public:
         move_piece(turn.x, turn.y, turn.x2, turn.y2, beat_series);
     }
 
-    void move_piece(const POS_T i, const POS_T j, const POS_T i2, const POS_T j2, const int beat_series = 0)
+    void move_piece(const POS_T i, const POS_T j, const POS_T i2, const POS_T j2, const int beat_series = 0)  // двигает шашки по доске
     {
         if (mtx[i2][j2])
         {
@@ -107,7 +107,7 @@ public:
             mtx[i][j] += 2;
         mtx[i2][j2] = mtx[i][j];
         drop_piece(i, j);
-        add_history(beat_series);
+        add_history(beat_series); // обновляет историю побитий
     }
 
     void drop_piece(const POS_T i, const POS_T j)
@@ -116,7 +116,7 @@ public:
         rerender();
     }
 
-    void turn_into_queen(const POS_T i, const POS_T j)
+    void turn_into_queen(const POS_T i, const POS_T j)  // превращение шашки в королеву
     {
         if (mtx[i][j] == 0 || mtx[i][j] > 2)
         {
@@ -130,7 +130,7 @@ public:
         return mtx;
     }
 
-    void highlight_cells(vector<pair<POS_T, POS_T>> cells)
+    void highlight_cells(vector<pair<POS_T, POS_T>> cells) // подсвечивает клетки
     {
         for (auto pos : cells)
         {
@@ -140,7 +140,7 @@ public:
         rerender();
     }
 
-    void clear_highlight()
+    void clear_highlight()  // убирает подсвечивание
     {
         for (POS_T i = 0; i < 8; ++i)
         {
@@ -149,26 +149,26 @@ public:
         rerender();
     }
 
-    void set_active(const POS_T x, const POS_T y)
+    void set_active(const POS_T x, const POS_T y)  // устанавливает клетку активной
     {
         active_x = x;
         active_y = y;
         rerender();
     }
 
-    void clear_active()
+    void clear_active()  // убирает активность клетки
     {
         active_x = -1;
         active_y = -1;
         rerender();
     }
 
-    bool is_highlighted(const POS_T x, const POS_T y)
+    bool is_highlighted(const POS_T x, const POS_T y)  // подсвечена ли клетка
     {
         return is_highlighted_[x][y];
     }
 
-    void rollback()
+    void rollback() // возвращает последний ход
     {
         auto beat_series = max(1, *(history_beat_series.rbegin()));
         while (beat_series-- && history_mtx.size() > 1)
@@ -181,21 +181,22 @@ public:
         clear_active();
     }
 
-    void show_final(const int res)
+    void show_final(const int res) // показывает результаты матча
     {
         game_results = res;
         rerender();
     }
 
     // use if window size changed
-    void reset_window_size()
+    void reset_window_size() // меняет размер окна
     {
         SDL_GetRendererOutputSize(ren, &W, &H);
         rerender();
     }
 
-    void quit()
+    void quit() // обработка логики закрытия игры
     {
+        // уничтожает текстуры
         SDL_DestroyTexture(board);
         SDL_DestroyTexture(w_piece);
         SDL_DestroyTexture(b_piece);
@@ -210,12 +211,12 @@ public:
 
     ~Board()
     {
-        if (win)
+        if (win) // если выиграл, закрывает игру
             quit();
     }
 
 private:
-    void add_history(const int beat_series = 0)
+    void add_history(const int beat_series = 0) // запоминает количество побитий в серии
     {
         history_mtx.push_back(mtx);
         history_beat_series.push_back(beat_series);
@@ -327,7 +328,7 @@ private:
         SDL_PollEvent(&windowEvent);
     }
 
-    void print_exception(const string& text) {
+    void print_exception(const string& text) { // печатает ошибку в лог
         ofstream fout(project_path + "log.txt", ios_base::app);
         fout << "Error: " << text << ". "<< SDL_GetError() << endl;
         fout.close();
